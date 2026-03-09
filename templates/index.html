@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Housing Analytics Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <span class="logo-icon">⬡</span>
+      <span class="logo-text">HousingIQ</span>
+    </div>
+    <nav class="side-nav">
+      <a href="#overview"     class="nav-item active" onclick="scrollTo('overview')">
+        <span class="ni">◈</span> Overview
+      </a>
+      <a href="#charts"       class="nav-item" onclick="scrollTo('charts')">
+        <span class="ni">◉</span> Analytics
+      </a>
+      <a href="#scatter"      class="nav-item" onclick="scrollTo('scatter')">
+        <span class="ni">◎</span> Correlation
+      </a>
+      <a href="#table-section" class="nav-item" onclick="scrollTo('table-section')">
+        <span class="ni">▦</span> Data
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="data-badge">
+        <span class="db-dot"></span>
+        <span id="liveRec">Loading…</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1>Housing Market <em>Dashboard</em></h1>
+        <p>Transformed Housing Data · Kaggle Dataset</p>
+      </div>
+      <div class="topbar-right">
+        <div class="filter-wrap">
+          <label>Min Price</label>
+          <input type="number" id="minP" placeholder="0"/>
+        </div>
+        <div class="filter-wrap">
+          <label>Max Price</label>
+          <input type="number" id="maxP" placeholder="∞"/>
+        </div>
+        <button class="btn-apply" onclick="applyFilter()">Apply</button>
+        <button class="btn-reset" onclick="resetFilter()">✕</button>
+      </div>
+    </header>
+
+    <!-- KPI STRIP -->
+    <section id="overview" class="kpi-strip">
+      <div class="kpi-card" style="--accent:#f97316">
+        <div class="kpi-label">Total Records</div>
+        <div class="kpi-value" id="kTotal">—</div>
+        <div class="kpi-bar" style="background:#f97316"></div>
+      </div>
+      <div class="kpi-card" style="--accent:#06b6d4">
+        <div class="kpi-label">Avg Price</div>
+        <div class="kpi-value" id="kAvg">—</div>
+        <div class="kpi-bar" style="background:#06b6d4"></div>
+      </div>
+      <div class="kpi-card" style="--accent:#10b981">
+        <div class="kpi-label">Median Price</div>
+        <div class="kpi-value" id="kMed">—</div>
+        <div class="kpi-bar" style="background:#10b981"></div>
+      </div>
+      <div class="kpi-card" style="--accent:#a855f7">
+        <div class="kpi-label">Columns</div>
+        <div class="kpi-value" id="kCols">—</div>
+        <div class="kpi-bar" style="background:#a855f7"></div>
+      </div>
+      <div class="kpi-card" style="--accent:#f43f5e">
+        <div class="kpi-label">Missing Values</div>
+        <div class="kpi-value" id="kMiss">—</div>
+        <div class="kpi-bar" style="background:#f43f5e"></div>
+      </div>
+    </section>
+
+    <!-- CHARTS ROW 1 -->
+    <section id="charts" class="chart-row">
+      <div class="chart-card wide">
+        <div class="card-head">
+          <span class="card-title">Price Distribution</span>
+          <span class="card-badge">Histogram</span>
+        </div>
+        <canvas id="cPriceDist"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="card-head">
+          <span class="card-title">Bedroom Split</span>
+          <span class="card-badge">Doughnut</span>
+        </div>
+        <canvas id="cBedroom"></canvas>
+      </div>
+    </section>
+
+    <!-- CHARTS ROW 2 -->
+    <section class="chart-row">
+      <div class="chart-card">
+        <div class="card-head">
+          <span class="card-title">Avg Price by Category</span>
+          <span class="card-badge">Horizontal Bar</span>
+        </div>
+        <canvas id="cAvgCat"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="card-head">
+          <span class="card-title">Top Locations</span>
+          <span class="card-badge">Bar</span>
+        </div>
+        <canvas id="cLocations"></canvas>
+      </div>
+    </section>
+
+    <!-- CHARTS ROW 3 -->
+    <section class="chart-row">
+      <div class="chart-card full">
+        <div class="card-head">
+          <span class="card-title">Price Trend</span>
+          <span class="card-badge">Line</span>
+        </div>
+        <canvas id="cTrend"></canvas>
+      </div>
+    </section>
+
+    <!-- SCATTER -->
+    <section id="scatter" class="chart-row">
+      <div class="chart-card full">
+        <div class="card-head">
+          <span class="card-title">Price vs Area — Correlation Scatter</span>
+          <span class="card-badge">Scatter</span>
+        </div>
+        <canvas id="cScatter"></canvas>
+      </div>
+    </section>
+
+    <!-- DATA TABLE -->
+    <section id="table-section" class="table-section">
+      <div class="table-head-row">
+        <span class="card-title">Raw Data Sample</span>
+        <input id="searchBox" type="text" placeholder="🔍  Filter rows…" oninput="filterTable()"/>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead id="tHead"></thead>
+          <tbody id="tBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer class="footer">Built with Flask &amp; Chart.js · Dataset: Kaggle – Transformed Housing Data</footer>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
